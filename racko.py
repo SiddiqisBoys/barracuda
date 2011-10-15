@@ -182,9 +182,9 @@ def combos(x, y):
 def s(x, y):
 	return combos(80-x,19-y)*combos(x-1, y)/3535316142212174320
 
-def heuristic(card, hand, s=False):
+def heuristic(card, hand, switch=False):
 	scores = [s(card, i) - s(hand[i], i) for i in range(20)]
-	if s and max(scores) < 0: return -1
+	if switch and max(scores) < 0: return -1
 	return scores.index(max(scores))
 
 class bot_heur(ProtoBot):
