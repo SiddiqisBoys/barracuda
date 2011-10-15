@@ -170,7 +170,7 @@ class botdfs(ProtoBot):
 def combos(x, y):
 	if x <= 0 or y <= 0: return 0
 	if y > x: return 0
-	return fact(x)/(fact(y)*fact(x-y))
+	return factorial(x)/(factorial(y)*factorial(x-y))
 
 def s(x, y):
 	return combos(80-x,19-y)*combos(x-1, y)/3535316142212174320
