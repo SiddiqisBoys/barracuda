@@ -203,7 +203,7 @@ class bot_heur(ProtoBot):
 			self.pile_size -= 1
 			self.removed += [discard]
 		elif other_player_moves[-1]["move"] == "take_discard":
-			self.opphand_givens += [(self.discard, other_player_moves["idx"])]
+			self.opphand_givens += [(self.discard, other_player_moves[-1]["idx"])]
 		self.discard = discard
 		i = self.choose_move()
 		if i < 20:
