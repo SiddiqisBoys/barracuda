@@ -1,0 +1,4 @@
+#The cards in the deck:
+
+def cards(prevtopdiscard):
+    
