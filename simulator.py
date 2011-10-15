@@ -28,12 +28,15 @@ class Simulator:
                 tmp=self.p0_hand[i]
                 self.p0_hand[i]=self.discard
                 self.discard=tmp
-            else:
+            elif m0["move"]=="request_deck":
                 d=deck.pop()
                 i=self.p0.get_deck_exchange(1,1000,self.p0_hand,d)
                 tmp=self.p0_hand[i]
                 self.p0_hand[i]=self.discard
                 self.discard=tmp
+            else:
+                print ("Invalid move", m0)
+                assert False
             self.p0.move_result(1,"next_player_move")
 
             if racko_scoring.end(self.p0_hand,self.p1_hand)!=0:
@@ -45,12 +48,15 @@ class Simulator:
                 tmp=self.p1_hand[i]
                 self.p1_hand[i]=self.discard
                 self.discard=tmp
-            else:
+            elif m1["move"]=="request_deck":
                 d=deck.pop()
                 i=self.p1.get_deck_exchange(1,1000,self.p1_hand,d)
                 tmp=self.p1_hand[i]
                 self.p1_hand[i]=self.discard
                 self.discard=tmp
+            else:
+                print ("Invalid move", m0)
+                assert False
             self.p1.move_result(1,"next_player_move")
 
             turn+=1
