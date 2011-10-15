@@ -175,7 +175,8 @@ class botdfs(ProtoBot):
 		return dfs_deck(self.depth, self.turn, self.pile_size, self.hand, self.opphand_givens, self.discard, self.removed, self.n, card)
 		
 def combos(x, y):
-	if x <= 0 or y <= 0: return 0
+	if y == 0: return 1
+	if x <= 0 or y < 0: return 0
 	if y > x: return 0
 	return factorial(x)/(factorial(y)*factorial(x-y))
 
@@ -184,6 +185,7 @@ def s(x, y):
 
 def heuristic(card, hand, switch=True):
 	scores = [s(card, i) - s(hand[i], i) for i in range(20)]
+	print(scores, switch)
 	if switch and max(scores) < 0: return -1
 	return scores.index(max(scores))
 
@@ -210,7 +212,7 @@ class bot_heur(ProtoBot):
 		return self.request_discard(i)
 	def get_deck_exchange(self,game_id, remaining_microseconds, rack, card):
 		self.pile_size -= 1
-		self.removed += [discard]
+		self.removed += [self.discard]
 		return self.choose_deckmove(card)
 	def choose_move(self):
 		return heuristic(self.discard, self.hand)
