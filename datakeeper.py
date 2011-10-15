@@ -13,6 +13,9 @@ class DataKeeper(ProtoBot):
         self.opponent_hand = set()
         self.total_gone = set()
 
+        self.indexed_opp_hand=[0 for x in range(20)]
+        self.turn_number=0
+
     def reshuffle_deck(self):
         """reset, as after a shuffle"""
         self.pile_size = 39
@@ -30,16 +33,16 @@ class DataKeeper(ProtoBot):
 
     def opponent_hand_add(self, card, index):
         """Add a card to the opponent's hand as know by watching them take the top discard"""
+        self.indexed_opp_hand[index]=card
         self.opponent_hand.add(card)
         self.total_gone.update(self.opponent_hand)
 
-    def opponent_hand_remove(self, card):
+    def opponent_hand_remove(self, card, index):
         """Have a card removed from the list of cards in the opponent's hand
         """
+        self.indexed_opp_hand[index]=0
         self.opponent_hand.discard(card)
         self.total_gone.discard(card)
-
-
 
     def dead_cards_between(self, lower, upper):
         """return all cards that are dead and have values between lower and upper inclusive"""
@@ -62,19 +65,43 @@ class DataKeeper(ProtoBot):
         self.player_id=player_id
         self.discard=initial_discard
         self.reshuffle_deck()
+        self.indexed_opp_hand=[0 for x in range(20)]
+        self.turn_number=1
 
     def get_move(self, game_id, rack, discard, remaining_microseconds, other_player_moves):
         self.hand=rack
+        if len(other_player_moves) != 0:
+            self.turn_number+=1
+
         if len(other_player_moves) == 0:
             pass
         elif other_player_moves[-1]["move"] == "take_deck":
             self.card_is_drawn()
+            self.opponent_hand_remove(discard, other_player_moves[-1]["idx"])
         elif other_player_moves[-1]["move"] == "take_discard":
+            self.opponent_hand_remove(discard, other_player_moves[-1]["idx"])
             self.opponent_hand_add(self.discard, other_player_moves[-1]["idx"])
 
+        self.debug_print(30,"Turn %d: %s" % (self.turn_number, self.indexed_opp_hand))
+        self.debug_print(30,"Turn %d: %s" % (self.turn_number, self.opponent_hand))
+
         self.discard = discard
-        return self.request_discard(0)
+
+    def request_discard(self, index):
+        self.discard=self.hand[index]
+        return ProtoBot.request_discard(self,index)
+
+    def request_deck(self):
+        self.card_is_drawn()
+        return ProtoBot.request_deck(self)
+
+    def deck_exchange(self,index):
+        self.discard=self.hand[index]
+        return index
 
     def get_deck_exchange(self,game_id, remaining_microseconds, rack, card):
-        self.card_is_drawn()
-        return 0
+        return self.deck_exchange(0)
+
+    def game_result(self, game_id, your_score, other_score, reason):
+        ProtoBot.game_result(self, game_id, your_score, other_score, reason)
+        print(self.indexed_opp_hand)

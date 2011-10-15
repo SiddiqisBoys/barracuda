@@ -3,11 +3,12 @@ from xmlrpc.server import SimpleXMLRPCRequestHandler
 import traceback
 
 from proto import ProtoBot
-from racko import botdfs, bot_heur
+from racko import botdfs
+from heuristic import HeuristicBot
 
 # SETUP Variables
 #the_bot = ProtoBot()
-the_bot = bot_heur()
+the_bot = HeuristicBot([1,0])
 server_ip="172.16.114.240"
 server_port=8000
 
