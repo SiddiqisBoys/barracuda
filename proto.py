@@ -1,14 +1,14 @@
-from xmlrpc.server import SimpleXMLRPCServer
-from xmlrpc.server import SimpleXMLRPCRequestHandler
-import os
-
-# Proto functions
 class ProtoBot:
     def __init__(self):
-        pass
+        self.is_enabled=True
+    def enable(self):
+        """Enable the bot"""
+        self.is_enabled=True
+    def disable(self):
+        """Disable the bot"""
+        self.is_enabled=False
     def ping(self,s):
-        global bot_enabled
-        if bot_enabled:
+        if self.is_enabled:
             return "pong"
         else:
             print("=====================================")
@@ -121,76 +121,3 @@ After this call is received, you will receive no further communication for the g
         reason -- A human-readable string explaining why the game is over"""
         print("#%d: The game is over. Our score: %d. Opponent score: %d. Reason: %s" % (game_id,your_score, other_score, reason))
 
-
-# SETUP
-the_bot = ProtoBot()
-server_ip="172.16.114.240"
-server_port=8000
-bot_enabled = True
-
-
-
-
-# Restrict to a particular path.
-class RequestHandler(SimpleXMLRPCRequestHandler):
-    rpc_paths = ('/RPC2',)
-
-# Create server
-server = SimpleXMLRPCServer((server_ip, server_port),
-                            requestHandler=RequestHandler)
-server.register_introspection_functions()
-
-
-server.register_function(the_bot.ping, 'ping')
-
-def start_game_helper(data):
-    the_bot.start_game(data["game_id"],
-                       data["player_id"],
-                       data["initial_discard"],
-                       data["other_player_id"])
-    return ""
-server.register_function(start_game_helper, "start_game")
-
-def get_move_helper(data):
-    other_player_moves=[ x[1] for x in data["other_player_moves"] ]
-
-    return the_bot.get_move(data["game_id"],
-                            data["rack"],
-                            data["discard"],
-                            data["remaining_microseconds"],
-                            other_player_moves)
-server.register_function(get_move_helper, "get_move")
-
-def get_deck_exchange_helper(data):
-    return the_bot.get_deck_exchange(data["game_id"],
-                                     data["remaining_microseconds"],
-                                     data["rack"],
-                                     data["card"])
-
-server.register_function(get_deck_exchange_helper, "get_deck_exchange")
-
-def move_result_helper(data):
-    move = data["move"]
-    if move=="next_player_move" or move=="move_ended_game":
-        reason = data["reason"]
-    else:
-        reason = ""
-    the_bot.move_result(data["game_id"],
-                        move,
-                        reason)
-    return ""
-
-server.register_function(move_result_helper, "move_result")
-
-def game_result_helper(data):
-    the_bot.game_result(data["game_id"],
-                        data["your_score"],
-                        data["other_score"],
-                        data["reason"])
-    return ""
-
-server.register_function(game_result_helper, "game_result")
-
-
-# Run the server's main loop
-server.serve_forever()
