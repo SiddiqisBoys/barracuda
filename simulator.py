@@ -3,6 +3,8 @@ import random
 from copy import copy
 import racko_scoring
 from racko import botdfs, bot_heur
+from nikita import DeadCardsBot
+from cards import DataKeeper
 
 class Simulator:
     def __init__(self,p0,p1):
@@ -81,5 +83,5 @@ class Simulator:
         print("GAME OVER")
 
 
-s=Simulator(bot_heur(),botdfs(3,1))
+s=Simulator(DeadCardsBot(),bot_heur())
 s.run_game()

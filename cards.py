@@ -54,7 +54,7 @@ class DataKeeper(ProtoBot):
 
     def live_cards_between(self, lower, upper):
         """return the number of cards that are live and have values between lower and upper exclusive"""
-        return (upper-lower-1)-len(dead_cards_between(lower,upper))
+        return (upper-lower-1)-len(self.dead_cards_between(lower,upper))
 
 
 
