@@ -15,6 +15,7 @@ class DataKeeper(ProtoBot):
 
     def reshuffle_deck(self):
         """reset, as after a shuffle"""
+        self.debug_print(15,"Player %d thinks the deck is reshuffled" % self.player_id)
         self.pile_size = 39
         self.gone_deck = set()
         self.total_gone = set()

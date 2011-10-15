@@ -1,12 +1,24 @@
 class ProtoBot:
     def __init__(self):
         self.is_enabled=True
+        self.verbosity=50
+        # 5 : rare messages only
+        # 10: messages every game
+        # 20: messages multiple times per game
+        # 30: messages every move
+        # 50: all messages
     def enable(self):
         """Enable the bot"""
         self.is_enabled=True
     def disable(self):
         """Disable the bot"""
         self.is_enabled=False
+    def set_verbosity(self,value=100):
+        """Set the verbosity level"""
+        self.is_verbose=value
+    def debug_print(self, verbosity, s):
+        if verbosity <= self.verbosity:
+            print(s)
     def ping(self,s):
         if self.is_enabled:
             return "pong"
@@ -27,7 +39,7 @@ giving you the opportunity to initialize any state you may need.
 
         Return value: None
         """
-        print ("#%d: Began game with player ID %d, initial discard %d" % (game_id, player_id, initial_discard))
+        self.debug_print(10,"#%d: Began game with player ID %d, initial discard %d" % (game_id, player_id, initial_discard))
     def get_move(self, game_id, rack, discard, remaining_microseconds, other_player_moves):
         """ The get_move function will be called to obtain the move your player wishes to make.
 
@@ -55,14 +67,14 @@ giving you the opportunity to initialize any state you may need.
         return self.request_deck()
         return self.request_discard(index)
         """
-        print ("#%d: Asked to make move with rack %s and discard pile %d" %(game_id, rack, discard))
+        self.debug_print (30,"#%d: Asked to make move with rack %s and discard pile %d" %(game_id, rack, discard))
         return self.request_discard(0)
     def request_deck(self):
         """ Creates output for requesting a card from the deck
 
         Usage: return self.request_deck()
         """
-        print("Requesting a card from the deck")
+        self.debug_print(30,"Requesting a card from the deck")
         return {"move": "request_deck"}
     def request_discard(self, index):
         """Creates output for discarding a card
@@ -72,7 +84,7 @@ giving you the opportunity to initialize any state you may need.
         Keyword arguments:
         index -- zero-based index of the card to replace
         """
-        print("Requesting to discard card with index %d" % index)
+        self.debug_print(30, "Requesting to discard card with index %d" % index)
         return {"move": "request_discard", "idx":index}
 
     def get_deck_exchange(self,game_id, remaining_microseconds, rack, card):
@@ -87,7 +99,7 @@ giving you the opportunity to initialize any state you may need.
         Return value:
         An integer which is the zero-based index of which slot in your rack you wish to place this card.
         """
-        print("#%d: Asked to exchange one of rack %s for card %d" % (game_id, rack, card))
+        self.debug_print(30,"#%d: Asked to exchange one of rack %s for card %d" % (game_id, rack, card))
         return 0
 
     def move_result(self,game_id, move, reason=""):
@@ -108,7 +120,7 @@ giving you the opportunity to initialize any state you may need.
         elif move=="illegal":
             print ("#%d: Illegal move. Reason: %s" % (game_id, reason))
         else:
-            print ("#%d: Move successful" % (game_id))
+            self.debug_print (35,"#%d: Move successful" % (game_id))
 
     def game_result(self,game_id, your_score, other_score, reason):
         """After a game completes, the game driver will make this advisory call to your program to notify it about the outcome of the game.
@@ -119,5 +131,5 @@ After this call is received, you will receive no further communication for the g
         your_score -- Your score for this game, as an integer.
         other_score -- The score of your opponent, as an integer.
         reason -- A human-readable string explaining why the game is over"""
-        print("#%d: The game is over. Our score: %d. Opponent score: %d. Reason: %s" % (game_id,your_score, other_score, reason))
+        self.debug_print(10,"#%d: The game is over. Our score: %d. Opponent score: %d. Reason: %s" % (game_id,your_score, other_score, reason))
 
