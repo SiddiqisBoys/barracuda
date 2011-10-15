@@ -206,9 +206,8 @@ class bot_heur(ProtoBot):
 			self.opphand_givens += [(self.discard, other_player_moves[-1]["idx"])]
 		self.discard = discard
 		i = self.choose_move()
-		if i < 20:
-			return self.request_discard(i)
-		return self.request_deck()
+		if i == -1: return self.request_deck()
+		return self.request_discard(i)
 	def get_deck_exchange(self,game_id, remaining_microseconds, rack, card):
 		self.pilesize -= 1
 		self.removed += [discard]
