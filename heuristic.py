@@ -12,7 +12,7 @@ class HeuristicBot(DataKeeper):
         DataKeeper.__init__(self)
 
     def heuristic_combined(self, card, hand, requesting_from_discard):
-        if self.turn_number<=15:
+        if self.turn_number<=30:
             # Do not build a racko until later on in the game
             scores = [self.score_0(card, i) - self.score_0(hand[i], i) for i in range(20)]
             if requesting_from_discard and max(scores) < 0: return -1
@@ -52,8 +52,12 @@ class HeuristicBot(DataKeeper):
             scores[i] *= 80 ** len(pro) * (i+1)**2
         #end for
 
-        # Take the largest score, from the back first
+        # Take the largest two scores, from the back first
         a = 14 - scores[::-1].index(max(scores))
+        scores = scores[:a] + scores[a+1:]
+        b = 14 - scores[::-1].index(max(scores))
+
+        ### FOR A ###
 
         # Initialize the protected list - similar to "pro" above
         # Protected list contains only elements that are part of the
@@ -65,23 +69,23 @@ class HeuristicBot(DataKeeper):
                 if hand[a+k] == hand[a+j] + k - j: v += [a + k]
             protected += [v]
         lenpro = [len(v) for v in protected]
-        protected = protected[lenpro[::-1].index(max(lenpro))]
+        protected_a = protected[lenpro[::-1].index(max(lenpro))]
 
         # Domain of swap index-values
         swap_domain = []
 
         # If already have a racko
-        if len(protected)==5:
+        if len(protected_a)==5:
             pass
         else:
             # The domain of index-values that can form part of our racko
-            racko_domain = range(max(0, max(protected) - 4), min(20, min(protected) + 5))
+            racko_domain = range(max(0, max(protected_a) - 4), min(20, min(protected_a) + 5))
 
             # The element at the start of the racko sequence
             racko_start = hand[a]
 
             # The element at the end of the racko sequence
-            racko_end = protected[-1]
+            racko_end = protected_a[-1]
 
             # List of cards to look for to place into the racko
             scan_for = []
@@ -89,19 +93,68 @@ class HeuristicBot(DataKeeper):
             internal_swap = []
             left_swap = []
             for j in racko_domain:
-                if j not in protected:
+                if j not in protected_a:
                     scan_for += [racko_start + j - a]
                     if j>racko_start:
                         if j>racko_end:
                             left_swap += [j]
                         else:
                             internal_swap += [j]
-            swap_domain=left_swap+internal_swap
+            swap_domain+=left_swap+internal_swap
 
             # If card is in scan_for, it return the index you want
             # to put it in
             if card in scan_for: return card + a - racko_start
 
+        ###FOR B###
+        # Initialize the protected list - similar to "pro" above
+        # Protected list contains only elements that are part of the
+        # racko
+        protected = []
+        for j in range(5):
+            v = []
+            for k in range(5):
+                if hand[b+k] == hand[b+j] + k - j: v += [b + k]
+            protected += [v]
+        lenpro = [len(v) for v in protected]
+        protected_b = protected[lenpro[::-1].index(max(lenpro))]
+
+        # Domain of swap index-values
+        swap_domain = []
+
+        # If already have a racko
+        if len(protected_a)==5 or len(protected_b)==5:
+            pass
+        else:
+            # The domain of index-values that can form part of our racko
+            racko_domain = range(max(0, max(protected_b) - 4), min(20, min(protected_b) + 5))
+
+            # The element at the start of the racko sequence
+            racko_start = hand[b]
+
+            # The element at the end of the racko sequence
+            racko_end = protected_b[-1]
+
+            # List of cards to look for to place into the racko
+            scan_for = []
+
+            internal_swap = []
+            left_swap = []
+            for j in racko_domain:
+                if j not in protected_b:
+                    scan_for += [racko_start + j - b]
+                    if j>racko_start:
+                        if j>racko_end:
+                            left_swap += [j]
+                        else:
+                            internal_swap += [j]
+            swap_domain+=left_swap+internal_swap
+
+            # If card is in scan_for, it return the index you want
+            # to put it in
+            if card in scan_for: return card + b - racko_start
+
+        protected = sorted(set(protected_a+protected_b))
         # Give a score to every non-protected card
         scores = [self.score_0(card, i) - self.score_0(hand[i], i) for i in range(20) if i not in protected]
         # If scores are negative, draw from the deck
@@ -122,7 +175,7 @@ class HeuristicBot(DataKeeper):
         live_before = val - 1
         live_after = 80 - val
         if live_before + live_after < 19: return 0
-        return binomial(live_before,pos)*binomial(live_after,19-pos)/binomial(live_before+live_after,19)
+        return binomial(live_before,pos)*binomial(live_after,19-pos)/3535316142212174320
 
     def score_1(self, val, pos):
         return binomial(75-val,14-pos)*binomial(val-1, pos)/6635869816740560
