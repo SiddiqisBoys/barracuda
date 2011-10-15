@@ -32,39 +32,55 @@ class Simulator:
         self.p1.start_game(1,1,self.discard,0)
 
         turn = 0
+        last_move=None
+        last_idx=0
         while racko_scoring.end(self.p0_hand,self.p1_hand)==0 and turn<75:
-            m0=self.p0.get_move(1,self.p0_hand,self.discard,1000,[])
+            m0=self.p0.get_move(1,self.p0_hand,self.discard,1000,
+                                [{"move":last_move, "idx":last_idx}]
+                                if last_move else [])
             if m0["move"]=="request_discard":
                 i=m0["idx"]
                 tmp=self.p0_hand[i]
                 self.p0_hand[i]=self.discard
                 self.discard=tmp
+                last_move="take_discard"
+                last_move_idx=i
             elif m0["move"]=="request_deck":
                 d=self.deal()
                 i=self.p0.get_deck_exchange(1,1000,self.p0_hand,d)
                 self.buried.append(self.discard)
                 self.discard=self.p0_hand[i]
                 self.p0_hand[i]=d
+                last_move="take_deck"
+                last_move_idx=i
             else:
                 print ("Invalid move", m0)
                 assert False
             self.p0.move_result(1,"next_player_move")
 
-            if racko_scoring.end(self.p0_hand,self.p1_hand)!=0:
-                break
+            if racko_scoring.end(self.p0_hand,self.p1_hand)==0 and turn<75:
+                pass
+            else:
+                turn+=1
 
-            m1=self.p1.get_move(1,self.p1_hand,self.discard,1000,[])
+            m1=self.p1.get_move(1,self.p1_hand,self.discard,1000,
+                                [{"move":last_move, "idx":last_idx}]
+                                if last_move else [])
             if m1["move"]=="request_discard":
                 i=m1["idx"]
                 tmp=self.p1_hand[i]
                 self.p1_hand[i]=self.discard
                 self.discard=tmp
+                last_move="take_discard"
+                last_move_idx=i
             elif m1["move"]=="request_deck":
                 d=self.deal()
                 i=self.p1.get_deck_exchange(1,1000,self.p1_hand,d)
                 self.buried.append(self.discard)
                 self.discard=self.p1_hand[i]
                 self.p1_hand[i]=d
+                last_move="take_deck"
+                last_move_idx=i
             else:
                 print ("Invalid move", m0)
                 assert False
