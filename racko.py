@@ -166,8 +166,8 @@ class botdfs(ProtoBot):
 			return self.request_discard(i)
 		return self.request_deck()
 	def get_deck_exchange(self,game_id, remaining_microseconds, rack, card):
-		self.pilesize -= 1
-		self.removed += [discard]
+		self.pile_size -= 1
+		self.removed += [self.discard]
 		return self.choose_deckmove(card)
 	def choose_move(self):
 		return dfs(self.depth, self.turn, self.pile_size, self.hand, self.opphand_givens, self.discard, self.removed, self.n)
