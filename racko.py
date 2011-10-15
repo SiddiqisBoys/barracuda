@@ -183,13 +183,40 @@ def combos(x, y):
 def s(x, y):
 	return combos(80-x,19-y)*combos(x-1, y)/3535316142212174320
 
-def heuristic(card, hand, switch=True):
-	scores = [s(card, i) - s(hand[i], i) for i in range(20)]
-	print(scores, switch)
-	if switch and max(scores) < 0: return -1
-	return scores.index(max(scores))
-
 class bot_heur(ProtoBot):
+        def heuristic(card, hand):
+                if turn == 20:
+                        a = 0
+                        while a < 20 and hand[a + 1] == card + a + 1: a += 1
+                        best_seq = (0, a, 0)
+                        for i in range(1, 20):
+                                a = i
+                                while a < 19 and hand[a + 1] == card + a + 1: a += 1
+                                b = i
+                                while b > 0 and hand[b - 1] == card - b - 1: b += 1
+                                if a - b > best_seq[1] - best_seq[0]: best_seq = (b, a, i)
+                        if best_seq[1] - best_seq[0] != 1: return best_seq[2]
+                elif turn >= 20:
+                        if best_seq[1] - best_seq[0] == 1
+                                for i in range(20):
+                                        a = i
+                                        while a < 19 and hand[a + 1] == card + a + 1: a += 1
+                                        b = i
+                                        while b > 0 and hand[b - 1] == card - b - 1: b += 1
+                                        if a - b > best_seq[1] - best_seq[0]: best_seq = (b, a, i)
+                        else:
+                                if card == hand[best_seq[1]] + 1 and best_seq[1] < 19: return best_seq[1] + 1
+                                if card == hand[best_seq[0]] - 1 and best_seq[0] > 0: return best_seq[0] - 1
+                                for i in range(20):
+                                        a = i
+                                        while a < 19 and hand[a + 1] == card + a + 1: a += 1
+                                        b = i
+                                        while b > 0 and hand[b - 1] == card - b - 1: b += 1
+                                        if a - b > best_seq[1] - best_seq[0]: best_seq = (b, a, i)
+                                if best_seq[1] - best_seq[0] != 1: return best_seq[2]
+                scores = [s(card, i) - s(hand[i], i) for i in range(20)]
+                if switch and max(scores) < 0: return -1
+                return scores.index(max(scores))
 	def start_game(self, game_id, player_id, initial_discard, other_player_id):
 		if player_id == 1: self.turn = True
 		else: self.turn = False
@@ -197,8 +224,10 @@ class bot_heur(ProtoBot):
 		self.pile_size = 39
 		self.opphand_givens = []
 		self.removed = []
+		self.turn = 0
 	def get_move(self, game_id, rack, discard, remaining_microseconds, other_player_moves):
 		self.hand = rack
+		self.turn += 1
 		if len(other_player_moves) == 0:
 			pass
 		elif other_player_moves[-1]["move"] == "take_deck":
@@ -215,6 +244,6 @@ class bot_heur(ProtoBot):
 		self.removed += [self.discard]
 		return self.choose_deckmove(card)
 	def choose_move(self):
-		return heuristic(self.discard, self.hand)
+		return self.heuristic(self.discard, self.hand)
 	def choose_deckmove(self, card):
-		return heuristic(card, self.hand, False)
+		return self.heuristic(card, self.hand, False)
