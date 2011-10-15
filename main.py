@@ -4,11 +4,11 @@ import traceback
 
 from proto import ProtoBot
 from racko import botdfs
-from heuristic import HeuristicBot
+from heuristic import HeuristicBotOld, HeuristicBot
 
 # SETUP Variables
 #the_bot = ProtoBot()
-the_bot = HeuristicBot([1,0])
+the_bot = HeuristicBot()
 server_ip="172.16.114.240"
 server_port=8000
 
