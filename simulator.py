@@ -13,9 +13,9 @@ class Simulator:
         deal=list(range(81)[1:])
         random.shuffle(deal)
         self.p0_hand=deal[0:20]
-        self.p1_hand=deal[21:40]
+        self.p1_hand=deal[20:40]
         self.discard=deal[40]
-        self.hand=deal[41:]
+        deck=deal[41:]
 
         self.p0.start_game(1,0,self.discard,1)
         self.p1.start_game(1,1,self.discard,0)
@@ -55,9 +55,14 @@ class Simulator:
 
             turn+=1
 
+        if racko_scoring.end(self.p0_hand,self.p1_hand)!=0:
+            print("Player one, hands are:")
+            print(self.p0_hand)
+            print(self.p1_hand)
+
         sc=racko_scoring.score(self.p0_hand,self.p1_hand)
-        self.p0.game_result(1,sc[0],sc[1],"Game over")
-        self.p1.game_result(1,sc[1],sc[0],"Game over")
+        self.p0.game_result(1,sc,0,"Game over")
+        self.p1.game_result(1,0,-sc,"Game over")
         print("GAME OVER")
 
 
