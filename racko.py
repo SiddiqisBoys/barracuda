@@ -182,9 +182,9 @@ def combos(x, y):
 def s(x, y):
 	return combos(80-x,19-y)*combos(x-1, y)/3535316142212174320
 
-def heuristic(card, hand):
+def heuristic(card, hand, s=False):
 	scores = [s(card, i) - s(hand[i], i) for i in range(20)]
-	if max(scores) < 0: return -1
+	if s and max(scores) < 0: return -1
 	return scores.index(max(scores))
 
 class bot_heur(ProtoBot):
@@ -209,10 +209,10 @@ class bot_heur(ProtoBot):
 		if i == -1: return self.request_deck()
 		return self.request_discard(i)
 	def get_deck_exchange(self,game_id, remaining_microseconds, rack, card):
-		self.pilesize -= 1
+		self.pile_size -= 1
 		self.removed += [discard]
 		return self.choose_deckmove(card)
 	def choose_move(self):
 		return heuristic(self.discard, self.hand)
 	def choose_deckmove(self, card):
-		return heuristic(card, self.hand)
+		return heuristic(card, self.hand, True)
