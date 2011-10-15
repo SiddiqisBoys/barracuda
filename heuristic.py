@@ -12,6 +12,13 @@ class HeuristicBot(DataKeeper):
         DataKeeper.__init__(self)
 
     def heuristic_combined(self, card, hand, requesting_from_discard):
+        if self.turn_number<=15:
+            # Do not build a racko until later on in the game
+            scores = [self.score_0(card, i) - self.score_0(hand[i], i) for i in range(20)]
+            if requesting_from_discard and max(scores) < 0: return -1
+            return scores.index(max(scores))
+
+
         ##Look at every set of five points, indexed by the first point
 
         # Assign a score
@@ -60,25 +67,52 @@ class HeuristicBot(DataKeeper):
         lenpro = [len(v) for v in protected]
         protected = protected[lenpro[::-1].index(max(lenpro))]
 
-        # The element at the start of the racko sequence
-        racko = hand[a]
+        # Domain of swap index-values
+        swap_domain = []
 
-        # List of cards to look for to place into the racko
-        scan_for = []
-        # Scan all elements of the list within the right range of the
-        # protected
-        for j in range(max(0, max(protected) - 4), min(20, min(protected) + 5)):
-            if j not in protected: scan_for += [racko + j - a]
-            # TODO: initialize the swap
+        # If already have a racko
+        if len(protected)==5:
+            pass
+        else:
+            # The domain of index-values that can form part of our racko
+            racko_domain = range(max(0, max(protected) - 4), min(20, min(protected) + 5))
 
-        # If card is in scan_for, it return the index you want to put
-        # it in
-        if card in scan_for: return card + a - racko
+            # The element at the start of the racko sequence
+            racko_start = hand[a]
+
+            # The element at the end of the racko sequence
+            racko_end = protected[-1]
+
+            # List of cards to look for to place into the racko
+            scan_for = []
+
+            internal_swap = []
+            left_swap = []
+            for j in racko_domain:
+                if j not in protected:
+                    scan_for += [racko_start + j - a]
+                    if j>racko_start:
+                        if j>racko_end:
+                            left_swap += [j]
+                        else:
+                            internal_swap += [j]
+            swap_domain=left_swap+internal_swap
+
+            # If card is in scan_for, it return the index you want
+            # to put it in
+            if card in scan_for: return card + a - racko_start
 
         # Give a score to every non-protected card
         scores = [self.score_0(card, i) - self.score_0(hand[i], i) for i in range(20) if i not in protected]
         # If scores are negative, draw from the deck
-        if requesting_from_discard and max(scores) < 0: return -1
+        if requesting_from_discard and max(scores) < 0:
+            # Try the deck
+            return -1
+        elif not requesting_from_discard and max(scores) < 0:
+            # Need to put it somewhere... try the swap
+            if swap_domain!=[]:
+                return swap_domain[-1]
+
         # Otherwise pick the highest of the scores
         return [i for i in range(20) if i not in protected][scores.index(max(scores))]
 
