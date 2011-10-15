@@ -11,6 +11,9 @@ class ProtoBot:
         if bot_enabled:
             return "pong"
         else:
+            print("=====================================")
+            print("BOT IS OFFLINE: DID NOT REPLY TO PING")
+            print("=====================================")
             return "The bot is currently offline"
     def start_game(self, game_id, player_id, initial_discard, other_player_id):
         """The start_game function will be called at the beginning of a game,
@@ -24,7 +27,7 @@ giving you the opportunity to initialize any state you may need.
 
         Return value: None
         """
-        pass
+        print ("#%d: Began game with player ID %d, initial discard %d" % (game_id, player_id, initial_discard))
     def get_move(self, game_id, rack, discard, remaining_microseconds, other_player_moves):
         """ The get_move function will be called to obtain the move your player wishes to make.
 
@@ -52,24 +55,27 @@ giving you the opportunity to initialize any state you may need.
         return self.request_deck()
         return self.request_discard(index)
         """
-        return self.request_deck()
+        print ("#%d: Asked to make move with rack %s and discard pile %d" %(game_id, rack, discard))
+        return self.request_discard(0)
     def request_deck(self):
         """ Creates output for requesting a card from the deck
 
         Usage: return self.request_deck()
         """
+        print("Requesting a card from the deck")
         return {"move": "request_deck"}
     def request_discard(self, index):
-        """ Creates output for discarding a card
+        """Creates output for discarding a card
 
         Usage: return self.request_discard(index)
 
         Keyword arguments:
         index -- zero-based index of the card to replace
         """
-        return {"move": "request_deck", "idx":index}
+        print("Requesting to discard card with index %d" % index)
+        return {"move": "request_discard", "idx":index}
 
-    def get_deck_exchange(game_id, remaining_microseconds, rack, card):
+    def get_deck_exchange(self,game_id, remaining_microseconds, rack, card):
         """If you return a move of type request_deck for a get_move call, the server will make this call to you.
 
         Keyword arguments:
@@ -81,9 +87,10 @@ giving you the opportunity to initialize any state you may need.
         Return value:
         An integer which is the zero-based index of which slot in your rack you wish to place this card.
         """
+        print("#%d: Asked to exchange one of rack %s for card %d" % (game_id, rack, card))
         return 0
 
-    def move_result(game_id, move, reason=""):
+    def move_result(self,game_id, move, reason=""):
         """After making a move, which may be a discard swap, a deck swap, or a failed move, the game driver will make this advisory call to your program to notify you about the outcome of your move.
 
         Keyword arguments:
@@ -96,9 +103,14 @@ giving you the opportunity to initialize any state you may need.
         Return value:
         None
 """
-        pass
+        if move=="move_ended_game":
+            print ("#%d: Game ended after my move. Reason: %s" % (game_id, reason))
+        elif move=="illegal":
+            print ("#%d: Illegal move. Reason: %s" % (game_id, reason))
+        else:
+            print ("#%d: Move successful" % (game_id))
 
-    def game_result(game_id, your_score, other_score, reason):
+    def game_result(self,game_id, your_score, other_score, reason):
         """After a game completes, the game driver will make this advisory call to your program to notify it about the outcome of the game.
 
 After this call is received, you will receive no further communication for the game corresponding to the given game_id.
@@ -107,7 +119,7 @@ After this call is received, you will receive no further communication for the g
         your_score -- Your score for this game, as an integer.
         other_score -- The score of your opponent, as an integer.
         reason -- A human-readable string explaining why the game is over"""
-        pass
+        print("#%d: The game is over. Our score: %d. Opponent score: %d. Reason: %s" % (game_id,your_score, other_score, reason))
 
 
 # SETUP
@@ -150,10 +162,10 @@ def get_move_helper(data):
 server.register_function(get_move_helper, "get_move")
 
 def get_deck_exchange_helper(data):
-    return the_bot.get_exchange(data["game_id"],
-                                data["remaining_microseconds"],
-                                data["rack"],
-                                data["card"])
+    return the_bot.get_deck_exchange(data["game_id"],
+                                     data["remaining_microseconds"],
+                                     data["rack"],
+                                     data["card"])
 
 server.register_function(get_deck_exchange_helper, "get_deck_exchange")
 
@@ -163,21 +175,21 @@ def move_result_helper(data):
         reason = data["reason"]
     else:
         reason = ""
-    the_bot.get_move_result(data["game_id"],
-                            move,
-                            reason)
+    the_bot.move_result(data["game_id"],
+                        move,
+                        reason)
     return ""
 
 server.register_function(move_result_helper, "move_result")
 
 def game_result_helper(data):
-    the_bot.get_move_result(data["game_id"],
-                            data["your_score"],
-                            data["other_score"],
-                            data["reason"])
+    the_bot.game_result(data["game_id"],
+                        data["your_score"],
+                        data["other_score"],
+                        data["reason"])
     return ""
 
-server.register_function(move_result_helper, "move_result")
+server.register_function(game_result_helper, "game_result")
 
 
 # Run the server's main loop
