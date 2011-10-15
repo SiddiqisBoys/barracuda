@@ -1,4 +1,6 @@
-from randint import shuffle
+from random import shuffle
+from math import factorial
+from proto import ProtoBot
 
 def end(hand, opphand):
 	seq = 1
@@ -164,6 +166,14 @@ class botdfs(ProtoBot):
 		return dfs(self.depth, self.turn, self.pile_size, self.hand, self.opphand_givens, self.discard, self.removed, self.n)
 	def choose_deckmove(self, card):
 		return dfs_deck(self.depth, self.turn, self.pile_size, self.hand, self.opphand_givens, self.discard, self.removed, self.n, card)
+		
+def combos(x, y):
+	if x <= 0 or y <= 0: return 0
+	if y > x: return 0
+	return fact(x)/(fact(y)*fact(x-y))
+
+def s(x, y):
+	return combos(80-x,19-y)*combos(x-1, y)/3535316142212174320
 
 def heuristic(card, hand):
 	scores = [s(card, i) - s(hand[i], i) for i in range(20)]
