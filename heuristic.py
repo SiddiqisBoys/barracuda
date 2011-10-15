@@ -52,5 +52,4 @@ class HeuristicBot(DataKeeper):
         if i == -1: return self.request_deck()
         return self.request_discard(i)
     def get_deck_exchange(self,game_id, remaining_microseconds, rack, card):
-        DataKeeper.get_deck_exchange(self,game_id, remaining_microseconds, rack, card)
-        return self.heuristic_combined(card, self.hand, requesting_from_discard=False)
+        return self.deck_exchange(self.heuristic_combined(card, self.hand, requesting_from_discard=False))
