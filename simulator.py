@@ -1,7 +1,8 @@
 from proto import ProtoBot
 import random
 from copy import copy
-from racko_scoring import end, score
+import racko_scoring
+from racko import botdfs, bot_heur
 
 class Simulator:
     def __init__(self,p0,p1):
@@ -20,7 +21,7 @@ class Simulator:
         self.p1.start_game(1,1,self.discard,0)
 
         turn = 0
-        while end(self.p0_hand,self.p1_hand)==0 and turn<75:
+        while racko_scoring.end(self.p0_hand,self.p1_hand)==0 and turn<75:
             m0=self.p0.get_move(1,self.p0_hand,self.discard,1000,[])
             if m0["move"]=="request_discard":
                 i=m0["idx"]
@@ -35,7 +36,7 @@ class Simulator:
                 self.discard=tmp
             self.p0.move_result(1,"next_player_move")
 
-            if end(self.p0_hand,self.p1_hand)!=0:
+            if racko_scoring.end(self.p0_hand,self.p1_hand)!=0:
                 break
 
             m1=self.p1.get_move(1,self.p1_hand,self.discard,1000,[])
@@ -54,11 +55,11 @@ class Simulator:
 
             turn+=1
 
-        sc=score(self.p0_hand,self.p1_hand)
+        sc=racko_scoring.score(self.p0_hand,self.p1_hand)
         self.p0.game_result(1,sc[0],sc[1],"Game over")
         self.p1.game_result(1,sc[1],sc[0],"Game over")
         print("GAME OVER")
 
 
-s=Simulator(ProtoBot(),ProtoBot())
+s=Simulator(bot_heur(),botdfs(3,1))
 s.run_game()
