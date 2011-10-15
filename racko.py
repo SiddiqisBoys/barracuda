@@ -74,21 +74,28 @@ def score(hand, opphand):
 		return scorea - 100
 	return scorea - scoreb
 
-def search(depth, turn, pile, hand, opphand, discard):
+def search(depth, turn, pile, hand, opphand, discard, alpha, beta):
 	if depth == 0: return score(hand, opphand)
 	b = end(hand, opphand)
 	if b != 0: return score(hand, opphand)
-	if turn: mx = -200
-	else: mx = 200
 	for i in range(20):
-		a = search(depth - 1, not turn, pile, opphand, hand[:i] + [discard] + hand[i+1:], hand[i])
-		if turn: mx = max(a, mx)
-		else: mx = min(a, mx)
+		temp = search(depth - 1, not turn, pile, opphand, hand[:i] + [discard] + hand[i+1:], hand[i], alpha, beta)
+		if turn:
+			if temp > alpha: alpha = temp
+			if beta <= alpha: return alpha
+		else:
+			if temp < beta: beta = temp
+			if beta <= alpha: return alpha
 	for i in range(20):
-		a = search(depth - 1, not turn, pile[:-1], opphand, hand[:i] + [pile[-1]] + hand[i+1:], hand[i])
-		if turn: mx = max(a, mx)
-		else: mx = min(a, mx)
-	return mx
+		temp = search(depth - 1, not turn, pile[:-1], opphand, hand[:i] + [pile[-1]] + hand[i+1:], hand[i], alpha, beta)
+		if turn:
+			if temp > alpha: alpha = temp
+			if beta <= alpha: return beta
+		else:
+			if temp < beta: beta = temp
+			if beta <= alpha: return beta
+	if turn: return alpha
+	return beta
 
 def dfs(depth, turn, pile_size, hand, opphand_givens, discard, removed, n):
 	#Apologies for the ugly code on this and dfs_deck.
