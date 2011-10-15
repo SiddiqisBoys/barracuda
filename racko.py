@@ -185,7 +185,6 @@ def s(x, y):
 
 def heuristic(card, hand, switch=True):
 	scores = [s(card, i) - s(hand[i], i) for i in range(20)]
-	print(scores, switch)
 	if switch and max(scores) < 0: return -1
 	return scores.index(max(scores))
 
