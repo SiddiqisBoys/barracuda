@@ -66,8 +66,6 @@ class DataKeeper(ProtoBot):
         self.opponent_hand.discard(card)
         self.total_gone.discard(card)
 
-
-
     def dead_cards_between(self, lower, upper):
         """return all cards that are dead and have values between lower and upper inclusive"""
         self.range_gone = set()
@@ -82,8 +80,6 @@ class DataKeeper(ProtoBot):
     def live_cards_between(self, lower, upper):
         """return the number of cards that are live and have values between lower and upper exclusive"""
         return (upper-lower-1)-len(self.dead_cards_between(lower,upper))
-
-
 
     def start_game(self,game_id,player_id,initial_discard,other_player_id):
         self.player_id=player_id
@@ -117,43 +113,55 @@ def binomial(x, y):
 class HeuristicBot(DataKeeper):
     def __init__(self,weights=[1,1]):
         DataKeeper.__init__(self)
-        self.weights=weights
 
     def heuristic_combined(self, card, hand, requesting_from_discard):
-        h0 = self.heuristic_0(card, hand, requesting_from_discard)
-        h1 = self.heuristic_1(card, hand, requesting_from_discard)
-        #print(h0, h1, hand, card)
-        if self.weights[0]*h0[1] > self.weights[1]*h1[1]:
-            return h0[0]
-        else:
-            return h1[0]
+        scores = [0 for i in range(15)]
+        for i in range(15):
+            a = hand[i]
+            pro = []
+            for j in range(5):
+                v = []
+                for k in range(5):
+                    if hand[i+k] == hand[i+j] + k - j: v += [i + k]
+                pro += [v]
+            lenpro = [len(v) for v in pro]
+            pro = pro[lenpro[::-1].index(max(lenpro))]
+            
+            for j in range(max(0, max(pro) - 4), min(15, min(pro) + 5)):
+                scores[i] += self.score_1(hand[j], j)
+            scores[i] *= 80 ** len(pro)
+        a = 14 - scores[::-1].index(max(scores))
+        protected = []
+        for j in range(5):
+            v = []
+            for k in range(5):
+                if hand[a+k] == hand[a+j] + k - j: v += [a + k]
+            protected += [v]
+        lenpro = [len(v) for v in protected]
+        protected = protected[lenpro[::-1].index(max(lenpro))]
+        
+        racko = hand[a]
+        
+        scan_for = []
+        for j in range(max(0, max(protected) - 4), min(15, min(protected) + 5)):
+            if j not in protected: scan_for += [racko + j - a]
+        
+        if card in scan_for: return card + a - racko
+        
+        scores = [self.score_0(card, i) - self.score_0(hand[i], i) for i in range(20) if i not in protected]
+        if requesting_from_discard and max(scores) < 0: return -1
+        return [i for i in range(20) if i not in protected][scores.index(max(scores))]
 
     def score_0(self,val, pos):
-        live_before=self.live_cards_between(0,val)
+        live_before=self.live_cards_between(-1,val)
         live_after=self.live_cards_between(val,80+1)
-        if live_before+live_after < 19: return 0
-        #if binomial(live_before+live_after,19) == 0: print(live_before, live_after, binomial(live_before,pos)*binomial(live_after,19-pos))
+        #live_before = val - 1
+        #live_after = 80 - val
+        if live_before + live_after < 19: return 0
         return binomial(live_before,pos)*binomial(live_after,19-pos)/binomial(live_before+live_after,19)
-
-    def heuristic_0(self, card, hand, requesting_from_discard):
-        scores = [self.score_0(card, i) - self.score_0(hand[i], i) for i in range(20)]
-        if requesting_from_discard and max(scores) < 0: return (-1, 1)
-        return (scores.index(max(scores)), max(scores))
 
     def score_1(self, val, pos):
         return binomial(75-val,14-pos)*binomial(val-1, pos)/6635869816740560
-
-    def heuristic_1(self, card, hand, requesting_from_discard):
-        scores = [0 for i in range(20)]
-        for i in range(20):
-            a = card
-            for j in range(max(0, i - 4), i + 1):
-                count = 0
-                for k in range(j, min(20, j + 5)):
-                    if hand[k] == a + (k - i): count += 1
-                scores[i] += self.score_1(a + (j - i), j) * 2 ** count
-        return (scores.index(max(scores)), max(scores))
-
 
     def get_move(self, game_id, rack, discard, remaining_microseconds, other_player_moves):
         DataKeeper.get_move(self, game_id, rack, discard, remaining_microseconds, other_player_moves)
@@ -164,6 +172,35 @@ class HeuristicBot(DataKeeper):
     def get_deck_exchange(self,game_id, remaining_microseconds, rack, card):
         DataKeeper.get_deck_exchange(self,game_id, remaining_microseconds, rack, card)
         return self.heuristic_combined(card, self.hand, requesting_from_discard=False)
+
+
+class HeuristicBotOld(DataKeeper):
+    def __init__(self):
+        DataKeeper.__init__(self)
+
+    def score_0(self,val, pos):
+        live_before=self.live_cards_between(-1,val)
+        live_after=self.live_cards_between(val,80+1)
+        #live_before = val - 1
+        #live_after = 80 - val
+        if live_before + live_after < 19: return 0
+        return binomial(live_before,pos)*binomial(live_after,19-pos)/binomial(live_before+live_after,19)
+
+    def heuristic_0(self, card, hand, requesting_from_discard):
+        scores = [self.score_0(card, i) - self.score_0(hand[i], i) for i in range(20)]
+        #print(card, hand, scores, scores.index(max(scores)))
+        if requesting_from_discard and max(scores) < 0: return -1
+        return scores.index(max(scores))
+
+    def get_move(self, game_id, rack, discard, remaining_microseconds, other_player_moves):
+        DataKeeper.get_move(self, game_id, rack, discard, remaining_microseconds, other_player_moves)
+        i = self.heuristic_0(self.discard, self.hand, requesting_from_discard=True)
+        if i == -1: return self.request_deck()
+        return self.request_discard(i)
+    
+    def get_deck_exchange(self,game_id, remaining_microseconds, rack, card):
+        DataKeeper.get_deck_exchange(self,game_id, remaining_microseconds, rack, card)
+        return self.heuristic_0(card, self.hand, requesting_from_discard=False)
 
 import random
 #from copy import copy
@@ -250,6 +287,7 @@ class Simulator:
                 print ("Invalid move", m0)
                 assert False
             self.p1.move_result(1,"next_player_move")
+            print(self.p0_hand, self.p1_hand)
 
             turn+=1
 
@@ -258,6 +296,6 @@ class Simulator:
         self.p1.game_result(1,0,-sc,"Game over")
 
 
-s=Simulator(HeuristicBot([1,0]),HeuristicBot([2,1]))
-score = sum(s.run_game() for i in range(10)) / 10
+s=Simulator(HeuristicBotOld(),HeuristicBot())
+score = sum(s.run_game() for i in range(1)) / 1
 print(score)
