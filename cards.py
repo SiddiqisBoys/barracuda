@@ -48,7 +48,7 @@ class DataKeeper(ProtoBot):
         if lower != upper:
             while(lower <= upper):
                 if lower in self.total_gone:
-                    self.range_gone.add(lower)    
+                    self.range_gone.add(lower)
                 lower += 1
         return self.range_gone
 

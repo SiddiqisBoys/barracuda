@@ -1,10 +1,10 @@
-from proto import ProtoBot
 import random
 from copy import copy
 import racko_scoring
-from racko import botdfs, bot_heur
-from nikita import DeadCardsBot
-from cards import DataKeeper
+
+from proto import ProtoBot
+from racko import botdfs
+from heuristic import HeuristicBot
 
 class Simulator:
     def __init__(self,p0,p1):
@@ -83,5 +83,5 @@ class Simulator:
         print("GAME OVER")
 
 
-s=Simulator(DeadCardsBot(),bot_heur())
+s=Simulator(HeuristicBot([1,0]),HeuristicBot([1,1]))
 s.run_game()
