@@ -72,4 +72,4 @@ def score(hand, opphand):
 		if mxseqb >= 5: return scorea - 150
 		if mxseqb >= 2: return scorea - 100  + 10*mxseqb
 		return scorea - 100
-	return scorea - scoreb
+	return (scorea, scoreb)
